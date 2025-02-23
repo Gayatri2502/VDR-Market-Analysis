@@ -1,0 +1,253 @@
+---
+title: "Forecasting Future Trends in the Europe VDR Market"
+author: "Gayatri Samal"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(forecast) 
+library(keras) 
+library(prophet)
+library(tidyverse)
+library(tsibble) 
+library(lubridate)
+
+library(ggplot2)
+library(dplyr)
+library(DT) # For interactive tables
+library(plotly) # For interactive plots
+
+vdr_data <- data.frame(
+  Year = 2014:2025,
+  Market_Size = c(265.7, 334.4, 419.3, 522.5, 645.9, 790.3, 955.1, 1137.6, 1332.1, 1529.8, 1718.5, 1883.0)
+)
+datatable(vdr_data, options = list(pageLength = 5, autoWidth = TRUE))
+```
+
+## 1. Historical Growth (2014-2025)
+
+From 2014 to 2025, the Europe Virtual Data Room (VDR) market experienced exponential growth, as seen in the market size chart. The market expanded from USD 265.7 billion in 2014 to an estimated USD 1883 billion in 2025, reflecting the increasing adoption of VDRs across various industries. This rapid growth suggests that VDR technology is becoming integral to businesses, particularly in sectors requiring high-security information sharing.
+
+
+##### VDR Market Size by Country (Europe)
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(plotly)
+
+latest_year <- 2025
+latest_market_sizes <- data.frame(
+  Country = c("UK", "France", "Germany", "Italy", "Spain", "Russia"),
+  Market_Size = c(505.4, 403.9, 289.2, 166.8, 150.5, 234.4)  # Values for 2025
+)
+
+p3 <- plot_ly(
+  data = latest_market_sizes,
+  labels = ~Country,
+  values = ~Market_Size,
+  type = 'pie',
+  textinfo = 'label+percent',
+  insidetextorientation = 'horizontal'
+) %>%
+  layout(
+    title = 'VDR Market Size by Country in Europe (2025)',
+    showlegend = TRUE
+  )
+
+p3
+```
+
+
+##### Key observations:
+
+The market grew steadily, with notable increases between 2018 and 2023, likely driven by the digital transformation of businesses and the need for secure data management platforms.
+The market's compound annual growth rate (CAGR) during this period highlights robust demand for VDR solutions.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+years <- 2014:2025
+market_size <- c(265.7, 334.4, 419.3, 522.5, 645.9, 790.3, 955.1, 1137.6, 1332.1, 1529.8, 1718.5, 1883.0)
+
+
+market_data <- data.frame(Year = years, Market_Size = market_size)
+
+
+p1 <- ggplot(market_data, aes(x = Year, y = Market_Size)) +
+  geom_line(color = "blue") +
+  geom_point() +
+  labs(title = "Virtual Data Room Market Size (2014-2025)",
+       x = "Year",
+       y = "Market Size (in USD Billion)") +
+  theme_minimal()
+
+ggplotly(p1)
+```
+
+
+## 2. Country-Specific Analysis
+
+The VDR market size analysis by country reveals the dominance of specific regions within Europe. The UK, France, and Germany are the major players, collectively accounting for a significant portion of the market.
+
+**UK**: Leading the market with USD 505.4 billion in 2025, the UK demonstrates a strong demand for VDR services, likely due to the concentration of financial institutions, legal firms, and other high-regulation industries.
+
+**France**: With a projected market size of USD 403.9 billion in 2025, France ranks second, driven by strong legal, financial, and M&A activities.
+
+**Germany**: Germany’s VDR market is expected to reach USD 289.2 billion in 2025, reflecting its robust manufacturing and industrial base requiring secure data exchange platforms.
+Italy, Spain, and Russia show steady growth, but their market sizes are smaller in comparison to the top three countries, likely due to varying rates of adoption and digital infrastructure development.
+
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+countries <- c("UK", "France", "Germany", "Italy", "Spain", "Russia")
+market_sizes <- data.frame(
+  Country = rep(countries, each = length(years)),
+  Year = rep(years, times = length(countries)),
+  Market_Size = c(
+    76.4, 95.5, 119.0, 147.4, 181.1, 220.2, 264.5, 313.0, 364.3, 415.7, 464.1, 505.4,  # UK
+    58.8, 73.8, 92.3, 114.7, 141.3, 172.4, 207.8, 246.8, 288.2, 330.0, 369.7, 403.9,  # France
+    37.8, 47.9, 60.5, 75.9, 94.5, 116.4, 141.7, 169.9, 200.4, 231.7, 262.1, 289.2,  # Germany
+    21.6, 27.4, 34.7, 43.5, 54.2, 66.9, 81.4, 97.7, 115.3, 133.5, 151.1, 166.8,  # Italy
+    18.7, 23.8, 30.2, 38.0, 47.6, 58.9, 72.0, 86.8, 102.8, 119.4, 135.7, 150.5,  # Spain
+    34.9, 43.8, 54.6, 67.7, 83.3, 101.4, 121.9, 144.5, 168.3, 192.4, 215.0, 234.4  # Russia
+  )
+)
+
+
+p2 <- ggplot(market_sizes, aes(x = Year, y = Market_Size, color = Country)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "VDR Market Size by Country (Europe) (2014-2025)",
+       x = "Year",
+       y = "Market Size (in USD Billion)") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+
+ggplotly(p2)
+
+```
+
+
+## 3. Component Analysis (Software vs. Services)
+
+The VDR market can be divided into two primary components: software and services. Software solutions dominate, representing nearly 80% of the total market by 2025. This trend is consistent across all forecast years, indicating that the demand for VDR software platforms far exceeds the need for services.
+
+**Software**: The software segment grew from USD 211.4 billion in 2014 to a forecasted USD 1477.7 billion in 2025. This surge is driven by the need for secure and scalable platforms that can handle large volumes of confidential data.
+
+**Services**: The services segment, while smaller, is still substantial. It expanded from USD 54.3 billion in 2014 to USD 405.3 billion in 2025, driven by support, maintenance, and customization services tied to the implementation of VDR software.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+competitors <- c("Software", "Services")
+components <- data.frame(
+  Component = rep(competitors, each = length(years)),
+  Year = rep(years, times = length(competitors)),
+  Market_Size = c(
+    211.4, 265.8, 332.8, 414.2, 511.4, 624.9, 754.3, 897.3, 1049.3, 1203.5, 1350.2, 1477.7,  # Software
+    54.3, 68.6, 86.5, 108.3, 134.5, 165.4, 200.8, 240.3, 282.8, 326.3, 368.2, 405.3  # Services
+  )
+)
+
+
+ggplot(components, aes(x = Year, y = Market_Size, color = Component)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "VDR Market Size by Component (2014-2025)",
+       x = "Year",
+       y = "Market Size (in USD Billion)") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+```
+
+
+## 4. ARIMA Forecast
+
+Using ARIMA modeling, the forecast for the VDR market indicates a continuation of the current growth trend. The model projects increasing market size through 2030, with confidence intervals providing a range of potential outcomes.
+
+**ARIMA** projections are consistent with historical data and indicate that Europe’s VDR market will continue to grow at a rapid pace, barring any unexpected market disruptions.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Convert data to time series object
+vdr_ts <- ts(vdr_data$Market_Size, start = 2014, frequency = 1)
+
+
+fit_arima <- auto.arima(vdr_ts)
+
+forecast_arima <- forecast(fit_arima, h = 5)
+
+forecast_arima_df <- data.frame(
+  Year = as.numeric(time(forecast_arima$mean)),
+  Forecast = as.numeric(forecast_arima$mean),
+  Lower = as.numeric(forecast_arima$lower[, 2]),
+  Upper = as.numeric(forecast_arima$upper[, 2])
+)
+
+plot_ly(forecast_arima_df, x = ~Year, y = ~Forecast, name = 'Forecast', type = 'scatter', mode = 'lines') %>%
+  add_ribbons(ymin = ~Lower, ymax = ~Upper, name = 'Confidence Interval', line = list(color = 'rgba(7, 164, 181, 0.05)'), fillcolor = 'rgba(7, 164, 181, 0.2)') %>%
+  layout(
+    title = "ARIMA Forecast for Europe VDR Market",
+    xaxis = list(title = "Year"),
+    yaxis = list(title = "Market Size (Millions)")
+  )
+
+
+
+```
+
+
+## 5. Prophet Forecast
+
+The Prophet model confirms similar growth patterns, predicting sustained expansion through 2030. The model’s flexibility in handling seasonal trends and non-linear growth ensures a reliable forecast, matching the historical data trends.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+prophet_data <- vdr_data %>%
+  mutate(ds = as.Date(paste(Year, "-01-01", sep = "")), y = Market_Size) %>%
+  select(ds, y)
+
+
+datatable(prophet_data, options = list(pageLength = 5, autoWidth = TRUE))
+
+prophet_model <- prophet(prophet_data)
+
+
+future <- make_future_dataframe(prophet_model, periods = 5, freq = 'year')
+
+forecast_prophet <- predict(prophet_model, future)
+
+p_prophet <- plot(prophet_model, forecast_prophet) +
+  ggtitle("Prophet Forecast for Europe VDR Market Size") +
+  ylab("Market Size (Millions)") +
+  xlab("Year")
+
+ggplotly(p_prophet)
+```
+
+
+
+## 6. Key Growth Drivers
+
+**Digital Transformation:** As more businesses migrate to digital solutions, the demand for secure data rooms is growing, especially in sectors like finance, legal, and M&A.
+
+**Regulatory Requirements:** Stricter data privacy laws (e.g., GDPR) are pushing companies to adopt VDRs for secure information sharing.
+
+**Cross-Border Transactions:** The rise in global M&A activities and cross-border collaborations continues to drive the demand for secure virtual platforms.
+
+
+## 7. Market Challenges
+
+**Data Security Concerns:** Despite the growth, concerns around data breaches and security vulnerabilities remain a significant challenge.
+
+**High Competition:** The increasing number of VDR providers has led to price competition, potentially affecting the profitability of some companies.
