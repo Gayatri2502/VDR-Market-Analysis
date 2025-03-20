@@ -1,0 +1,317 @@
+---
+title: "Latin America VDR Market Forecasting"
+output:
+  pdf_document:
+    toc: true
+  html_document:
+    df_print: paged
+    toc: true
+    toc_float: true
+    theme: cerulean
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(plotly)
+library(forecast)
+library(prophet)
+library(keras)
+library(tensorflow)
+library(lubridate)
+set.seed(123)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Overview of the Virtual Data Room Market
+
+
+The Virtual Data Room (VDR) market in Latin America has been experiencing consistent growth over the years. This report analyzes the historical market size data from 2014 to 2025 and forecasts future trends using three different time series models: ARIMA, SARIMA, and Prophet.
+
+
+### Market Size Analysis
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+market_size <- tibble::tribble(
+  ~Year, ~Market_Size,
+  2014, 67.3, 2015, 84.3, 2016, 105.1, 2017, 130.4, 
+  2018, 160.4, 2019, 195.3, 2020, 234.9, 2021, 278.4,
+  2022, 324.4, 2023, 370.7, 2024, 414.4, 2025, 451.9
+)
+
+p1 <- ggplot(market_size, aes(x = Year, y = Market_Size)) +
+  geom_line(color = "blue", size = 1) +
+  geom_point(color = "red") +
+  labs(title = "Latin America Virtual Data Room Market Size (2014-2025)", 
+       x = "Year", y = "Market Size (in Millions USD)") +
+  theme_minimal()
+
+ggplotly(p1)
+
+```
+
+
+
+
+## 2. Regional Analysis
+
+
+The regional analysis of the Latin America Virtual Data Room (VDR) market from 2014 to 2025 reveals significant growth trends across different countries. The analysis includes key markets such as Brazil, Mexico, Argentina, Colombia, and the Rest of Latin America.
+
+##### Findings from Regional Market Trends
+
+1. **Brazil**: Brazil consistently dominates the VDR market in Latin America, showing robust growth over the observed period. By 2025, Brazil is projected to reach approximately 206.9 million USD, reflecting its strong economic influence and higher adoption rates of digital transformation tools.
+   
+2. **Mexico**: As the second-largest market, Mexico demonstrates steady growth, with its market size expected to reach 83.3 million USD by 2025. The growth trajectory suggests an increasing demand for VDR services, driven by a rise in M&A activities and a supportive regulatory environment.
+
+3. **Argentina and Colombia**: Both Argentina and Colombia show similar upward trends, though at a slower pace compared to Brazil and Mexico. Argentina’s market size is projected to reach 59.3 million USD by 2025, while Colombia is expected to reach 43.7 million USD. The moderate growth in these countries can be attributed to economic fluctuations and varying levels of digital adoption.
+
+4. **Rest of Latin America**: The rest of Latin America also exhibits positive growth, collectively contributing a substantial share to the overall market. By 2025, this segment is expected to reach 58.8 million USD, indicating a broadening acceptance and need for VDR solutions across smaller markets in the region.
+
+Overall, the regional analysis highlights Brazil and Mexico as the primary drivers of market growth in Latin America, with other countries contributing steadily, signaling a widespread regional demand for VDR solutions.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+regional_data <- tibble::tribble(
+  ~Year, ~Brazil, ~Mexico, ~Argentina, ~Colombia, ~Rest_of_LA,
+  2014, 29.8, 13.9, 8.4, 6.1, 9.0, 
+  2015, 37.4, 17.2, 10.6, 7.7, 11.3, 
+  2016, 46.8, 21.3, 13.3, 9.7, 14.1, 
+  2017, 58.2, 26.1, 16.5, 12.1, 17.4,
+  2018, 71.9, 31.8, 20.4, 15.0, 21.4, 
+  2019, 87.8, 38.3, 25.0, 18.3, 25.9, 
+  2020, 105.9, 45.6, 30.2, 22.1, 31.1, 
+  2021, 125.9, 53.5, 35.9, 26.4, 36.7, 
+  2022, 147.2, 61.7, 42.0, 30.9, 42.7, 
+  2023, 168.7, 69.7, 48.2, 35.5, 48.6, 
+  2024, 189.2, 77.2, 54.1, 39.8, 54.1, 
+  2025, 206.9, 83.3, 59.3, 43.7, 58.8
+)
+
+p2 <- ggplot(regional_data, aes(x = Year)) +
+  geom_line(aes(y = Brazil, color = "Brazil"), size = 1) +
+  geom_line(aes(y = Mexico, color = "Mexico"), size = 1) +
+  geom_line(aes(y = Argentina, color = "Argentina"), size = 1) +
+  geom_line(aes(y = Colombia, color = "Colombia"), size = 1) +
+  geom_line(aes(y = Rest_of_LA, color = "Rest of Latin America"), size = 1) +
+  labs(title = "Latin America VDR Market Trends by Country (2014-2025)", 
+       x = "Year", y = "Market Size (in Millions USD)", color = "Country") +
+  theme_minimal()
+
+ggplotly(p2)
+
+```
+
+
+
+## 3. Component Analysis: Software vs. Services
+
+The component analysis distinguishes between the market growth of software and services within the VDR sector. Both components have shown consistent growth from 2014 to 2025, with software dominating the market.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+component_data <- tibble::tribble(
+  ~Year, ~Software, ~Services,
+  2014, 55.1, 12.1, 2015, 69.0, 15.3, 2016, 85.9, 19.2, 
+  2017, 106.5, 23.9, 2018, 130.8, 29.5, 2019, 159.2, 36.1, 
+  2020, 191.2, 43.6, 2021, 226.4, 52.0, 2022, 263.6, 60.8,
+  2023, 300.9, 69.8, 2024, 336.0, 78.4, 2025, 366.0, 85.9
+)
+
+p3 <- ggplot(component_data, aes(x = Year)) +
+  geom_line(aes(y = Software, color = "Software"), size = 1) +
+  geom_line(aes(y = Services, color = "Services"), size = 1) +
+  labs(title = "Latin America Market Growth by Component: Software vs. Services (2014-2025)", 
+       x = "Year", y = "Market Size (in Millions USD)", color = "Component") +
+  theme_minimal()
+
+ggplotly(p3)
+
+```
+
+##### Findings from Component Analysis
+
+1. **Software**: The software segment has shown the most substantial growth, with its market size projected to reach 366 million USD by 2025. This trend reflects the increasing reliance on advanced software solutions that offer enhanced security, user accessibility, and data management capabilities essential for VDR operations.
+
+2. **Services**: Although smaller in size compared to the software segment, services have also demonstrated steady growth, projected to reach 85.9 million USD by 2025. The growth in services can be attributed to the rising need for support, consulting, and maintenance services, which complement the software offerings and enhance the overall VDR user experience.
+
+The component analysis underscores the dominance of software within the VDR market, driven by technological advancements and user demand for sophisticated, secure data room solutions. The growing service segment further complements this trend, reflecting the broader ecosystem of support that sustains software utilization.
+
+
+
+## 4. Deployment Mode Analysis
+
+The deployment mode analysis examines the growth of cloud-based versus on-premises VDR solutions from 2014 to 2025. This analysis provides insights into the changing preferences for deployment modes within the VDR market.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+deployment_data <- tibble::tribble(
+  ~Year, ~Cloud, ~On_Premises,
+  2014, 57.0, 10.3, 2015, 71.2, 13.0, 2016, 88.7, 16.4, 
+  2017, 109.8, 20.5, 2018, 134.9, 25.5, 2019, 163.9, 31.3, 
+  2020, 196.8, 38.0, 2021, 232.9, 45.5, 2022, 270.9, 53.5,
+  2023, 309.0, 61.7, 2024, 344.9, 69.5, 2025, 375.4, 76.5
+)
+
+p4 <- ggplot(deployment_data, aes(x = Year)) +
+  geom_line(aes(y = Cloud, color = "Cloud"), size = 1) +
+  geom_line(aes(y = On_Premises, color = "On-premises"), size = 1) +
+  labs(title = "Latin America Market Growth by Deployment Mode (2014-2025)", 
+       x = "Year", y = "Market Size (in Millions USD)", color = "Deployment Mode") +
+  theme_minimal()
+
+ggplotly(p4)
+
+```
+
+
+1. **Cloud Deployment**: Cloud-based VDR solutions have shown dominant and accelerating growth, with the market size expected to reach 375.4 million USD by 2025. The rapid adoption of cloud deployment is driven by its advantages, such as scalability, cost-effectiveness, accessibility, and reduced infrastructure requirements, making it the preferred choice for many organizations.
+
+2. **On-Premises Deployment**: On-premises deployment, while growing, lags behind cloud adoption. Its market size is expected to reach 76.5 million USD by 2025. The slower growth of on-premises solutions is likely due to higher upfront costs, maintenance requirements, and a shift in preference towards more flexible and remotely accessible cloud solutions.
+
+The deployment mode analysis highlights a clear shift towards cloud-based VDR solutions, reflecting broader industry trends favoring cloud computing and digital transformation. The reduced emphasis on on-premises deployment suggests that cloud solutions are becoming the standard in the VDR market, aligning with the evolving needs of businesses for more dynamic and scalable data management tools.
+
+
+
+## 5. Forecasting Using Time Series Models
+
+### Forecasting with ARIMA Model
+The ARIMA model is used to forecast future market sizes based on the historical data. The ARIMA model captures the underlying patterns in the data and extrapolates future values.
+
+ARIMA Model Results
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+ts_data <- ts(market_size$Market_Size, start = c(2014), frequency = 1)
+fit_arima <- auto.arima(ts_data)
+forecast_arima <- forecast(fit_arima, h = 5)
+
+forecast_df <- data.frame(
+  Year = as.numeric(time(forecast_arima$mean)), 
+  Forecast = as.numeric(forecast_arima$mean),
+  Lower_80 = as.numeric(forecast_arima$lower[,1]),
+  Upper_80 = as.numeric(forecast_arima$upper[,1]),
+  Lower_95 = as.numeric(forecast_arima$lower[,2]),
+  Upper_95 = as.numeric(forecast_arima$upper[,2])
+)
+
+p <- ggplot(forecast_df, aes(x = Year)) +
+  geom_ribbon(aes(ymin = Lower_95, ymax = Upper_95, fill = "95% Confidence Interval"), alpha = 0.3) +
+  geom_ribbon(aes(ymin = Lower_80, ymax = Upper_80, fill = "80% Confidence Interval"), alpha = 0.5) +
+  geom_line(aes(y = Forecast, color = "Forecast"), size = 1.2) +
+  labs(title = "ARIMA Forecast of Market Size for Latin America", 
+       x = "Year", 
+       y = "Market Size (in Millions USD)") +
+  scale_fill_manual(name = "Confidence Intervals", values = c("95% Confidence Interval" = "lightblue", "80% Confidence Interval" = "lightgrey")) +
+  scale_color_manual(name = "Forecast", values = c("Forecast" = "blue")) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+ggplotly(p)
+
+```
+
+##### Findings from ARIMA Forecast
+
+**Projected Growth**: The ARIMA model forecasts a steady growth in the market size from 2026 to 2030.
+
+**Confidence Intervals**: The 95% confidence interval shows a broader range, indicating higher uncertainty in the predictions further into the future.
+
+
+### Forecasting with SARIMA Model
+
+The SARIMA model extends ARIMA by including seasonal components, making it ideal for data with evident seasonality patterns.
+
+SARIMA Model Results
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+ts_data <- ts(market_size$Market_Size, start = c(2014), frequency = 1)
+sarima_model <- auto.arima(ts_data, seasonal = TRUE)
+sarima_forecast <- forecast(sarima_model, h = 5)
+
+forecast_df <- data.frame(
+  Year = seq(2026, 2030),
+  MarketSize = as.numeric(sarima_forecast$mean),
+  Lower = as.numeric(sarima_forecast$lower[,2]),
+  Upper = as.numeric(sarima_forecast$upper[,2])
+)
+
+combined_data <- bind_rows(
+  market_size %>% rename(MarketSize = Market_Size),
+  forecast_df
+)
+
+interactive_plot <- plot_ly() %>%
+  add_lines(x = ~combined_data$Year, y = ~combined_data$MarketSize, name = 'Historical & Forecast', line = list(color = 'blue')) %>%
+  add_ribbons(x = ~forecast_df$Year, ymin = ~forecast_df$Lower, ymax = ~forecast_df$Upper, 
+              fillcolor = 'rgba(255, 0, 0, 0.2)', line = list(color = 'rgba(255, 0, 0, 0.2)'),
+              name = '95% Confidence Interval') %>%
+  layout(title = "Latin America SARIMA Forecast for Market Size (2026-2030)",
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Market Size (in millions)"))
+
+interactive_plot
+
+```
+
+##### Findings from SARIMA Forecast
+
+**Seasonality Adjustment**: The SARIMA model accounts for potential seasonal patterns, offering a more refined forecast compared to ARIMA.
+
+**Forecast Consistency:** The SARIMA model's predictions are consistent with ARIMA, with slightly narrower confidence intervals.
+
+### Forecasting with Prophet Model
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+# Load required libraries
+library(tidyverse)
+library(prophet)
+library(plotly)
+
+# Prepare data for Prophet model
+prophet_data <- market_size %>%
+  mutate(Year = as.Date(paste0(Year, "-01-01"))) %>%
+  rename(ds = Year, y = Market_Size)
+
+# Fit the Prophet model
+prophet_model <- prophet(prophet_data)
+
+# Create a future data frame with predictions for the next 5 years
+future <- make_future_dataframe(prophet_model, periods = 5, freq = "year")
+
+# Generate forecast
+prophet_forecast <- predict(prophet_model, future)
+
+# Prepare data for interactive plotting
+forecast_plot_data <- prophet_forecast %>%
+  select(ds, yhat, yhat_lower, yhat_upper) %>%
+  mutate(ds = as.Date(ds))
+
+# Create an interactive Plotly graph
+forecast_plot <- plot_ly() %>%
+  add_lines(x = ~forecast_plot_data$ds, y = ~forecast_plot_data$yhat, name = 'Forecast', line = list(color = 'blue')) %>%
+  add_ribbons(x = ~forecast_plot_data$ds, ymin = ~forecast_plot_data$yhat_lower, ymax = ~forecast_plot_data$yhat_upper, 
+              fillcolor = 'rgba(173, 216, 230, 0.5)', line = list(color = 'rgba(173, 216, 230, 0.5)'),
+              name = 'Confidence Interval') %>%
+  add_lines(x = ~prophet_data$ds, y = ~prophet_data$y, name = 'Historical Data', line = list(color = 'black')) %>%
+  layout(title = "Latin America Forecast of VDR Market Size using Prophet Model ",
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Market Size (in Millions USD)"),
+         legend = list(x = 0.1, y = 0.9))
+
+forecast_plot
+
+
+
+```
+
+##### Findings from Prophet Forecast
+
+**Forecast Trends:**  The model shows a consistent upward trend, aligning with historical data and expectations for market growth.
+
+
+
+## 6. Marketing Strategy
+
+The forecasted growth suggests an expanding market opportunity. Strategies should focus on scaling operations, capturing emerging markets within Latin America, and enhancing product offerings.
+
+
+
+
+

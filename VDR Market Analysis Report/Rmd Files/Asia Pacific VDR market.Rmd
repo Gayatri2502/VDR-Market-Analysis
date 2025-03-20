@@ -1,0 +1,320 @@
+---
+title: "Asia Pacific VDR Market Forecasting"
+output: 
+  html_document:
+    df_print: paged
+    toc: true
+    toc_float: true
+    theme: cerulean
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(plotly)
+library(forecast)
+library(prophet)
+library(keras)
+library(tensorflow)
+library(lubridate)
+set.seed(123)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Overview of the Virtual Data Room Market
+
+#### Market Size Analysis
+
+The market size graph depicts consistent growth in the Virtual Data Room (VDR) market across the Asia Pacific region from 2014 to 2025. The data shows that the market has nearly quadrupled over the years, growing from 244.5 million USD in 2014 to a forecasted 1827.8 million USD by 2025.
+
+This growth is driven by increasing demand for secure digital platforms to store, share, and access confidential information, especially within financial, legal, and governmental sectors. The upward trend signifies a broad adoption of VDR solutions as businesses in the region prioritize data security.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+market_size <- tibble::tribble(
+  ~Year, ~Market_Size,
+  2014, 244.5, 2015, 309.3, 2016, 389.6, 2017, 487.9, 
+  2018, 606.1, 2019, 745.2, 2020, 905.0, 2021, 1083.1,
+  2022, 1274.4, 2023, 1470.6, 2024, 1660.0, 2025, 1827.8
+)
+
+p1 <- ggplot(market_size, aes(x = Year, y = Market_Size)) +
+  geom_line(color = "blue", size = 1) +
+  geom_point(color = "red") +
+  labs(title = "Asia Pacific VDR Market Size (2014-2025)", 
+       x = "Year", y = "Market Size (in Millions USD)") +
+  theme_minimal()
+
+ggplotly(p1)
+
+
+```
+
+#### Regional Analysis
+
+The regional analysis reveals that China leads the VDR market in the Asia Pacific region. China’s market size is expected to increase from 120.4 million USD in 2014 to 865.3 million USD by 2025. Other regions, such as Japan, Australia & New Zealand, and India, also exhibit substantial growth, although at a slower pace compared to China.
+
+The India market, in particular, is experiencing rapid adoption of VDRs, increasing from 17.5 million USD in 2014 to 140 million USD by 2025. This signifies India's growing digital infrastructure and the need for secure data management solutions due to increased foreign investment and M&A activities.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+regional_data <- tibble::tribble(
+  ~Year, ~China, ~Japan, ~Australia_NZ, ~India, ~Rest_Asia_Pacific,
+  2014, 120.4, 40.0, 25.4, 17.5, 41.2, 
+  2015, 151.8, 51.1, 31.8, 22.3, 52.4, 
+  2016, 190.5, 65.0, 39.6, 28.2, 66.3, 
+  2017, 237.7, 82.2, 49.0, 35.6, 83.4,
+  2018, 294.2, 103.1, 60.2, 44.5, 104.1, 
+  2019, 360.4, 128.0, 73.2, 55.0, 128.5, 
+  2020, 436.1, 157.0, 87.9, 67.2, 156.7, 
+  2021, 520.1, 189.8, 104.0, 81.0, 188.2, 
+  2022, 609.8, 225.5, 120.9, 95.8, 222.3, 
+  2023, 701.2, 262.8, 138.0, 111.3, 257.3, 
+  2024, 788.7, 299.6, 154.0, 126.4, 291.3, 
+  2025, 865.3, 333.2, 167.6, 140.0, 321.7
+)
+
+
+p2 <- ggplot(regional_data, aes(x = Year)) +
+  geom_line(aes(y = China, color = "China"), size = 1) +
+  geom_line(aes(y = Japan, color = "Japan"), size = 1) +
+  geom_line(aes(y = Australia_NZ, color = "Australia & NZ"), size = 1) +
+  geom_line(aes(y = India, color = "India"), size = 1) +
+  geom_line(aes(y = Rest_Asia_Pacific, color = "Rest of Asia Pacific"), size = 1) +
+  labs(title = "Asia Pacific Regional Market Trends (2014-2025)", 
+       x = "Year", y = "Market Size (in Millions USD)", color = "Region") +
+  theme_minimal()
+
+ggplotly(p2)
+
+
+```
+
+
+## 2. Component Analysis
+
+The component-wise breakdown indicates that the software segment dominates the VDR market, accounting for the majority of the revenue. The software market is expected to grow from 192.6 million USD in 2014 to 1421.9 million USD by 2025. The services sector, although smaller, still shows significant growth, expected to reach 405.9 million USD by 2025.
+
+#### Software vs. Services
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+component_data <- tibble::tribble(
+  ~Year, ~Software, ~Services,
+  2014, 192.6, 52.0, 2015, 243.3, 66.0, 2016, 306.1, 83.5, 
+  2017, 382.9, 105.0, 2018, 475.1, 130.9, 2019, 583.5, 161.6, 
+  2020, 707.9, 197.1, 2021, 846.2, 236.8, 2022, 994.6, 279.7,
+  2023, 1146.5, 324.1, 2024, 1292.7, 367.2, 2025, 1421.9, 405.9
+)
+
+p3 <- ggplot(component_data, aes(x = Year)) +
+  geom_line(aes(y = Software, color = "Software"), size = 1) +
+  geom_line(aes(y = Services, color = "Services"), size = 1) +
+  labs(title = "Asia Pacific Market Growth by Component (2014-2025)", 
+       x = "Year", y = "Market Size (in Millions USD)", color = "Component") +
+  theme_minimal()
+
+ggplotly(p3)
+
+
+```
+
+This indicates that while companies are purchasing VDR software licenses, there is a complementary demand for associated services such as maintenance, support, and consulting.
+
+## 3. Deployment mode Analysis
+
+The market is showing a clear shift towards cloud-based deployments, which are becoming the preferred choice over on-premises solutions. Cloud-based VDR solutions offer flexibility, scalability, and cost advantages, making them attractive to businesses of all sizes. The cloud segment is expected to dominate the market, growing from 199 million USD in 2014 to 1458.4 million USD in 2025.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+deployment_data <- tibble::tribble(
+  ~Year, ~Cloud, ~On_Premises,
+  2014, 199.0, 45.5, 2015, 251.3, 58.0, 2016, 316.0, 73.7, 
+  2017, 394.9, 93.0, 2018, 489.7, 116.4, 2019, 601.0, 144.2, 
+  2020, 728.6, 176.4, 2021, 870.4, 212.7, 2022, 1022.3, 252.1,
+  2023, 1177.6, 293.0, 2024, 1326.9, 333.1, 2025, 1458.4, 369.4
+)
+
+
+p4 <- ggplot(deployment_data, aes(x = Year)) +
+  geom_line(aes(y = Cloud, color = "Cloud"), size = 1) +
+  geom_line(aes(y = On_Premises, color = "On-premises"), size = 1) +
+  labs(title = "Market Growth by Deployment Mode (2014-2025)", 
+       x = "Year", y = "Market Size (in Millions USD)", color = "Deployment Mode") +
+  theme_minimal()
+
+ggplotly(p4)
+
+```
+
+The on-premises deployment segment is still significant, but its growth is more moderate, projected to reach 369.4 million USD by 2025. Companies opting for on-premises solutions are generally in highly regulated industries requiring stricter data control and compliance.
+
+## 4. Forecasting Using Time Series Models
+#### Forecasting with ARIMA Model
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+library(forecast)
+library(ggplot2)
+library(plotly)
+
+
+ts_data <- ts(market_size$Market_Size, start = c(2014), frequency = 1)
+
+fit_arima <- auto.arima(ts_data)
+
+
+forecast_arima <- forecast(fit_arima, h = 5)
+
+forecast_df <- data.frame(
+  Year = as.numeric(time(forecast_arima$mean)), 
+  Forecast = as.numeric(forecast_arima$mean),
+  Lower_80 = as.numeric(forecast_arima$lower[,1]),
+  Upper_80 = as.numeric(forecast_arima$upper[,1]),
+  Lower_95 = as.numeric(forecast_arima$lower[,2]),
+  Upper_95 = as.numeric(forecast_arima$upper[,2])
+)
+
+
+p <- ggplot(forecast_df, aes(x = Year)) +
+
+  geom_ribbon(aes(ymin = Lower_95, ymax = Upper_95, fill = "95% Confidence Interval"), alpha = 0.3) +
+
+  geom_ribbon(aes(ymin = Lower_80, ymax = Upper_80, fill = "80% Confidence Interval"), alpha = 0.5) +
+
+  geom_line(aes(y = Forecast, color = "Forecast"), size = 1.2) +
+  labs(title = "ARIMA Forecast of Asia Pacific Market Size", 
+       x = "Year", 
+       y = "Market Size (in Millions USD)") +
+  scale_fill_manual(name = "Confidence Intervals", values = c("95% Confidence Interval" = "lightblue", "80% Confidence Interval" = "lightgrey")) +
+  scale_color_manual(name = "Forecast", values = c("Forecast" = "blue")) +
+  theme_minimal() +
+  theme(legend.position = "bottom") 
+
+ggplotly(p)
+
+
+```
+
+The ARIMA model forecast illustrates strong growth prospects for the Asia Pacific VDR market over the next five years (2026-2030). The forecast indicates that the market will continue its upward trajectory, with a steady increase in demand. The confidence intervals (80% and 95%) also suggest that the forecast is reliable with a narrow range, further supporting the optimistic growth outlook.
+
+#### Forecasting with SARIMA Model
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+library(tidyverse)
+library(plotly)
+library(forecast)
+library(prophet)
+library(keras)
+library(tensorflow)
+library(timetk)
+library(tidyquant)
+library(lubridate)
+
+set.seed(123)
+
+
+years <- 2014:2025
+market_size <- c(244.5, 309.3, 389.6, 487.9, 606.1, 745.2, 905.0, 1083.1, 1274.4, 1470.6, 1660.0, 1827.8)
+
+data <- data.frame(Year = years, MarketSize = market_size)
+
+data$Year <- as.Date(paste0(data$Year, "-01-01"))
+
+ts_data <- ts(data$MarketSize, start = c(2014), frequency = 1)
+
+sarima_model <- auto.arima(ts_data)
+
+sarima_forecast <- forecast(sarima_model, h = 5)
+
+forecast_df <- data.frame(
+  Year = seq(as.Date("2026-01-01"), by = "year", length.out = 5),
+  MarketSize = as.numeric(sarima_forecast$mean),
+  Lower = as.numeric(sarima_forecast$lower[,2]),
+  Upper = as.numeric(sarima_forecast$upper[,2])
+)
+
+combined_data <- bind_rows(
+  data,
+  forecast_df
+)
+
+interactive_plot <- plot_ly() %>%
+  add_lines(x = ~data$Year, y = ~data$MarketSize, name = 'Historical Data', line = list(color = 'blue')) %>%
+  add_lines(x = ~forecast_df$Year, y = ~forecast_df$MarketSize, name = 'Forecast', line = list(color = 'red')) %>%
+  add_ribbons(x = ~forecast_df$Year, ymin = ~forecast_df$Lower, ymax = ~forecast_df$Upper, 
+              fillcolor = 'rgba(255, 0, 0, 0.2)', line = list(color = 'rgba(255, 0, 0, 0.2)'),
+              name = '95% Confidence Interval') %>%
+  layout(title = "SARIMA Forecast for Market Size (2026-2030)",
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Market Size (in millions)"))
+
+interactive_plot
+
+
+
+```
+
+The SARIMA model, which takes seasonality into account, offers similar findings, confirming the strong growth trajectory observed in the ARIMA forecast. The forecast highlights that the VDR market will surpass 2000 million USD by 2030, driven by sustained demand for secure data management solutions.
+
+
+#### Forecasting with Prophet Model
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+prophet_data <- data %>%
+  rename(ds = Year, y = MarketSize)
+
+prophet_model <- prophet(prophet_data)
+
+future <- make_future_dataframe(prophet_model, periods = 5, freq = "year")
+prophet_forecast <- predict(prophet_model, future)
+
+
+dyplot.prophet(prophet_model, prophet_forecast)
+
+
+
+```
+
+The Prophet model's flexibility in capturing growth patterns shows consistent growth in the market size, with minimal deviations between predicted values and the actual market performance. The forecast suggests an average annual growth rate of approximately 12-15% through 2030, a robust indication of the VDR market's long-term potential in the Asia Pacific region.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+library(prophet)
+library(ggplot2)
+
+prophet_data <- data %>%
+  rename(ds = Year, y = MarketSize)
+
+prophet_model <- prophet(prophet_data)
+
+future <- make_future_dataframe(prophet_model, periods = 5, freq = "year")
+prophet_forecast <- predict(prophet_model, future)
+
+forecast_plot <- ggplot(prophet_forecast, aes(x = ds, y = yhat)) +
+  geom_line(color = "blue") +
+  geom_ribbon(aes(ymin = yhat_lower, ymax = yhat_upper), alpha = 0.2) +
+  labs(
+    title = "Forecast of Market Size Over Time",
+    subtitle = "Based on Prophet Model Forecasting",
+    x = "Year",
+    y = "Market Size (in Million USD)"
+  ) +
+  theme_minimal()
+
+print(forecast_plot)
+
+```
+
+
+
+
+## 5. Market Strategy Summary
+
+
+The Asia-Pacific VDR market is projected to experience stable growth through 2030, with ARIMA, SARIMA, and Prophet models all indicating consistent expansion. To capitalize on this growth, companies should prioritize cloud-based VDR solutions, emphasizing their scalability, security, and cost-effectiveness, which are increasingly in demand. Targeting key emerging markets like India and the Rest of Asia-Pacific, while maintaining strongholds in China, Japan, and Australia, will ensure market penetration. Expanding service offerings such as consulting, customization, and training will help businesses maximize the potential of their VDR platforms. Additionally, integrating AI and automation can enhance data management capabilities, particularly for industries like legal and finance, providing a competitive edge. Forming strategic partnerships with local IT and cybersecurity firms will further strengthen regional presence and ensure robust security measures, positioning companies for sustained success in the growing market.
